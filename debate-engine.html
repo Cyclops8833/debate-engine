@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debate Engine</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#09090e">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Debate Engine">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:            #09090e;
+      --panel-blue:    #07111d;
+      --panel-amber:   #120c04;
+      --blue-border:   #162840;
+      --amber-border:  #2e1608;
+      --blue-accent:   #2d6db5;
+      --blue-bright:   #5ba3e8;
+      --blue-text:     #c0d8f0;
+      --blue-muted:    #3d6890;
+      --blue-evidence: #2a4d6a;
+      --blue-rebuttal: #1e3a52;
+      --amber-accent:  #bf6218;
+      --amber-bright:  #e08a28;
+      --amber-text:    #f0d5a8;
+      --amber-muted:   #8a6030;
+      --amber-evidence:#6a4020;
+      --amber-rebuttal:#4a2c14;
+      --divider-color: #141424;
+      --input-bg:      #111118;
+      --input-border:  #22222e;
+      --muted:         #3a3a50;
+      --label:         #44445a;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: #bbbbc8;
+      font-family: 'Crimson Text', Georgia, serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── MASTHEAD ── */
+    header {
+      text-align: center;
+      padding: 2.8rem 2rem 1.8rem;
+      border-bottom: 1px solid var(--divider-color);
+      position: relative;
+    }
+
+    .masthead {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1.9rem, 5vw, 3.2rem);
+      font-weight: 900;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #dcdce8;
+      line-height: 1;
+      margin-bottom: 0.55rem;
+    }
+
+    .tagline {
+      font-size: 0.72rem;
+      letter-spacing: 0.38em;
+      text-transform: uppercase;
+      color: var(--label);
+    }
+
+    header::after {
+      content: '';
+      display: block;
+      width: 40px;
+      height: 1px;
+      background: var(--muted);
+      margin: 1.2rem auto 0;
+    }
+
+    /* ── CONTROLS ── */
+    .controls {
+      max-width: 680px;
+      margin: 2.2rem auto;
+      padding: 0 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+    }
+
+    .topic-row {
+      display: flex;
+      gap: 0;
+    }
+
+    .topic-input {
+      flex: 1;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-right: none;
+      color: #d0d0dc;
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 1.1rem;
+      padding: 0.85rem 1.1rem;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+
+    .topic-input::placeholder { color: var(--label); }
+    .topic-input:focus { border-color: #2e2e45; }
+
+    .argue-btn {
+      background: #16162a;
+      border: 1px solid #2a2a44;
+      color: #9090b0;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      padding: 0 1.6rem;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .argue-btn:hover:not(:disabled) {
+      background: #1e1e36;
+      border-color: #44447a;
+      color: #c0c0e0;
+    }
+
+    .argue-btn:active:not(:disabled) { transform: translateY(1px); }
+
+    .argue-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    /* ── DEPTH TOGGLE ── */
+    .bottom-row {
+      display: flex;
+      align-items: center;
+      gap: 1.4rem;
+    }
+
+    .row-label {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--label);
+      white-space: nowrap;
+    }
+
+    .depth-toggle {
+      display: flex;
+      background: #0c0c14;
+      border: 1px solid #1e1e2c;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+      padding: 3px;
+      gap: 2px;
+    }
+
+    .depth-btn {
+      background: transparent;
+      border: none;
+      color: var(--label);
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 0.9rem;
+      letter-spacing: 0.06em;
+      padding: 0.38rem 1.1rem;
+      cursor: pointer;
+      transition: all 0.12s;
+      user-select: none;
+      position: relative;
+    }
+
+    .depth-btn.active {
+      background: #1a1a2c;
+      color: #a0a0c4;
+      box-shadow:
+        inset 0 2px 4px rgba(0,0,0,0.6),
+        inset 0 1px 2px rgba(0,0,0,0.4),
+        0 1px 0 rgba(255,255,255,0.03);
+    }
+
+    .depth-btn:not(.active):hover { color: #7070a0; }
+
+    /* ── ERROR / LOADING ── */
+    .status-band {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      display: none;
+    }
+
+    .status-band.visible { display: block; }
+
+    .error-bar {
+      background: #180808;
+      border: 1px solid #4a1515;
+      color: #b05050;
+      font-size: 0.88rem;
+      padding: 0.65rem 1rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .loading-bar {
+      color: var(--label);
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 0.68rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      padding: 0.5rem 0.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .loading-dots span {
+      display: inline-block;
+      width: 4px;
+      height: 4px;
+      background: var(--muted);
+      border-radius: 50%;
+      margin: 0 1px;
+      animation: dot-pulse 1.4s ease-in-out infinite;
+    }
+
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes dot-pulse {
+      0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+      40%            { opacity: 1;   transform: scale(1); }
+    }
+
+    /* ── DEBATE PANELS ── */
+    .debate-area {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr;
+    }
+
+    .panel {
+      padding: 2.8rem 2.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      min-height: 340px;
+    }
+
+    .panel-left  { background: var(--panel-blue); }
+    .panel-right { background: var(--panel-amber); }
+
+    .divider-line {
+      background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        var(--divider-color) 8%,
+        var(--divider-color) 92%,
+        transparent 100%
+      );
+    }
+
+    /* placeholder state */
+    .placeholder {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: #1e1e30;
+    }
+
+    .panel-right .placeholder { color: #251808; }
+
+    /* ── PANEL CONTENT ── */
+    .panel-header {
+      padding-bottom: 1.1rem;
+      border-bottom: 1px solid;
+    }
+
+    .panel-left .panel-header  { border-color: var(--blue-border); }
+    .panel-right .panel-header { border-color: var(--amber-border); }
+
+    .stance-eyebrow {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 0.58rem;
+      letter-spacing: 0.45em;
+      text-transform: uppercase;
+      margin-bottom: 0.65rem;
+    }
+
+    .panel-left .stance-eyebrow  { color: var(--blue-muted); }
+    .panel-right .stance-eyebrow { color: var(--amber-muted); }
+
+    .stance-headline {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(0.95rem, 1.8vw, 1.25rem);
+      font-weight: 700;
+      line-height: 1.35;
+      font-style: italic;
+    }
+
+    .panel-left .stance-headline  { color: var(--blue-text); }
+    .panel-right .stance-headline { color: var(--amber-text); }
+
+    /* argument sections */
+    .arg-section { display: flex; flex-direction: column; gap: 0.7rem; }
+
+    .section-eyebrow {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 0.55rem;
+      letter-spacing: 0.45em;
+      text-transform: uppercase;
+    }
+
+    .panel-left .section-eyebrow  { color: var(--blue-accent); }
+    .panel-right .section-eyebrow { color: var(--amber-accent); }
+
+    .opening-text {
+      font-size: 1.0rem;
+      line-height: 1.72;
+    }
+
+    .panel-left .opening-text  { color: #98aec4; }
+    .panel-right .opening-text { color: #c4b098; }
+
+    .supporting-block { margin-bottom: 1rem; }
+
+    .point-head {
+      font-size: 0.98rem;
+      font-weight: 600;
+      line-height: 1.45;
+      margin-bottom: 0.28rem;
+    }
+
+    .panel-left .point-head  { color: var(--blue-text); }
+    .panel-right .point-head { color: var(--amber-text); }
+
+    .evidence-body {
+      font-size: 0.88rem;
+      line-height: 1.65;
+      font-style: italic;
+    }
+
+    .panel-left .evidence-body  { color: var(--blue-evidence); }
+    .panel-right .evidence-body { color: var(--amber-evidence); }
+
+    .rebuttal-section {
+      border-top: 1px solid;
+      padding-top: 1.4rem;
+    }
+
+    .panel-left .rebuttal-section  { border-color: var(--blue-border); }
+    .panel-right .rebuttal-section { border-color: var(--amber-border); }
+
+    .rebuttal-text {
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+
+    .panel-left .rebuttal-text  { color: var(--blue-rebuttal); }
+    .panel-right .rebuttal-text { color: var(--amber-rebuttal); }
+
+    /* ── CURSOR ── */
+    .cursor {
+      display: inline-block;
+      width: 1.5px;
+      height: 0.9em;
+      vertical-align: text-bottom;
+      margin-left: 0.5px;
+      animation: blink 0.65s step-end infinite;
+    }
+
+    .panel-left  .cursor { background: var(--blue-accent); }
+    .panel-right .cursor { background: var(--amber-accent); }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 720px) {
+      .debate-area {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1px auto;
+      }
+
+      .divider-line {
+        background: linear-gradient(
+          to right,
+          transparent 0%,
+          var(--divider-color) 8%,
+          var(--divider-color) 92%,
+          transparent 100%
+        );
+        width: auto;
+        height: 1px;
+      }
+
+      .panel { padding: 2rem 1.4rem; }
+      .bottom-row { flex-wrap: wrap; }
+    }
+
+    /* ── API KEY PANEL ── */
+    .key-btn {
+      position: absolute;
+      top: 1.2rem;
+      right: 1.4rem;
+      background: transparent;
+      border: none;
+      color: var(--label);
+      font-size: 1.05rem;
+      cursor: pointer;
+      padding: 0.3rem;
+      line-height: 1;
+      transition: color 0.15s;
+    }
+    .key-btn:hover { color: #7070a0; }
+
+    .key-panel {
+      display: none;
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 1.5rem 1.2rem;
+    }
+    .key-panel.visible { display: block; }
+
+    .key-row {
+      display: flex;
+      gap: 0;
+    }
+
+    .key-input {
+      flex: 1;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-right: none;
+      color: #d0d0dc;
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 1rem;
+      padding: 0.7rem 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+    .key-input::placeholder { color: var(--label); }
+    .key-input:focus { border-color: #2e2e45; }
+
+    .key-save-btn {
+      background: #16162a;
+      border: 1px solid #2a2a44;
+      color: #9090b0;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 0 1.2rem;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .key-save-btn:hover { background: #1e1e36; border-color: #44447a; color: #c0c0e0; }
+
+    .key-hint {
+      font-size: 0.75rem;
+      color: var(--label);
+      margin-top: 0.55rem;
+      letter-spacing: 0.02em;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="masthead">Debate Engine</div>
+  <div class="tagline">Both sides &mdash; every argument</div>
+  <button class="key-btn" id="keyToggle" title="API Key">⚙</button>
+</header>
+
+<div class="key-panel" id="keyPanel">
+  <div class="key-row">
+    <input type="password" class="key-input" id="keyInput" placeholder="sk-ant-api03-…" autocomplete="off" spellcheck="false">
+    <button class="key-save-btn" id="keySaveBtn">Save Key</button>
+  </div>
+  <div class="key-hint">Your key is saved in this browser only — never shared anywhere except Anthropic's API.</div>
+</div>
+
+<div class="controls">
+  <div class="topic-row">
+    <input
+      type="text"
+      class="topic-input"
+      id="topicInput"
+      placeholder="Enter any topic, question, or proposition&hellip;"
+      autocomplete="off"
+      spellcheck="false"
+    >
+    <button class="argue-btn" id="argueBtn">Argue</button>
+  </div>
+
+  <div class="bottom-row">
+    <span class="row-label">Depth</span>
+    <div class="depth-toggle" role="group" aria-label="Argument depth">
+      <button class="depth-btn active" data-depth="surface"  aria-pressed="true">Surface</button>
+      <button class="depth-btn"        data-depth="moderate" aria-pressed="false">Moderate</button>
+      <button class="depth-btn"        data-depth="deep"     aria-pressed="false">Deep</button>
+    </div>
+  </div>
+</div>
+
+<div class="status-band" id="statusBand">
+  <div class="error-bar"  id="errorBar"  style="display:none"></div>
+  <div class="loading-bar" id="loadingBar" style="display:none">
+    <span>Constructing arguments</span>
+    <span class="loading-dots"><span></span><span></span><span></span></span>
+  </div>
+</div>
+
+<div class="debate-area" id="debateArea">
+  <div class="panel panel-left"  id="panelLeft"><div class="placeholder">Position A</div></div>
+  <div class="divider-line"></div>
+  <div class="panel panel-right" id="panelRight"><div class="placeholder">Position B</div></div>
+</div>
+
+<script>
+  // ── SERVICE WORKER ──
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
+
+  // ── API KEY (stored in localStorage, never in source) ──
+  let API_KEY = localStorage.getItem('debate_api_key') || '';
+
+  // ── KEY PANEL ──
+  const keyPanel = document.getElementById('keyPanel');
+  const keyInput = document.getElementById('keyInput');
+
+  if (API_KEY) keyInput.value = API_KEY;
+  if (!API_KEY) keyPanel.classList.add('visible');
+
+  document.getElementById('keyToggle').addEventListener('click', () => {
+    keyPanel.classList.toggle('visible');
+  });
+
+  document.getElementById('keySaveBtn').addEventListener('click', () => {
+    const k = keyInput.value.trim();
+    if (k) {
+      API_KEY = k;
+      localStorage.setItem('debate_api_key', k);
+      keyPanel.classList.remove('visible');
+    }
+  });
+
+  keyInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('keySaveBtn').click();
+  });
+
+  // ── STATE ──
+  let depth = 'surface';
+
+  // ── DEPTH TOGGLE ──
+  document.querySelectorAll('.depth-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.depth-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-pressed', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
+      depth = btn.dataset.depth;
+    });
+  });
+
+  // ── ENTER KEY ──
+  document.getElementById('topicInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') triggerDebate();
+  });
+
+  document.getElementById('argueBtn').addEventListener('click', triggerDebate);
+
+  // ── HELPERS ──
+  function esc(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function showError(msg) {
+    const bar = document.getElementById('errorBar');
+    bar.textContent = msg;
+    bar.style.display = 'block';
+    document.getElementById('statusBand').classList.add('visible');
+  }
+
+  function clearError() {
+    const bar = document.getElementById('errorBar');
+    bar.style.display = 'none';
+    bar.textContent = '';
+  }
+
+  function setLoading(on) {
+    const bar  = document.getElementById('loadingBar');
+    const band = document.getElementById('statusBand');
+    bar.style.display = on ? 'flex' : 'none';
+    if (on || document.getElementById('errorBar').style.display === 'block') {
+      band.classList.add('visible');
+    } else {
+      band.classList.remove('visible');
+    }
+  }
+
+  function resetPanels() {
+    document.getElementById('panelLeft').innerHTML  = '<div class="placeholder">Position A</div>';
+    document.getElementById('panelRight').innerHTML = '<div class="placeholder">Position B</div>';
+  }
+
+  // ── TYPEWRITER ──
+  function typewrite(id, text, speed, onDone) {
+    const el = document.getElementById(id);
+    if (!el || !text) { if (onDone) onDone(); return; }
+
+    let i = 0;
+    el.innerHTML = '<span class="cursor"></span>';
+
+    const iv = setInterval(() => {
+      i++;
+      el.innerHTML = esc(text.slice(0, i)) + (i < text.length ? '<span class="cursor"></span>' : '');
+      if (i >= text.length) {
+        clearInterval(iv);
+        if (onDone) onDone();
+      }
+    }, speed);
+  }
+
+  // ── RENDER ──
+  function buildPanel(side, isLeft) {
+    const prefix = isLeft ? 'A' : 'B';
+    return `
+      <div class="panel-header">
+        <div class="stance-eyebrow">${isLeft ? 'Position A' : 'Position B'}</div>
+        <div class="stance-headline" id="stance${prefix}"></div>
+      </div>
+      <div class="arg-section">
+        <div class="section-eyebrow">Opening Claim</div>
+        <div class="opening-text" id="opening${prefix}"></div>
+      </div>
+      <div class="arg-section">
+        <div class="section-eyebrow">Supporting Arguments</div>
+        <div class="supporting-block">
+          <div class="point-head"    id="point${prefix}1"></div>
+          <div class="evidence-body" id="evid${prefix}1"></div>
+        </div>
+        <div class="supporting-block">
+          <div class="point-head"    id="point${prefix}2"></div>
+          <div class="evidence-body" id="evid${prefix}2"></div>
+        </div>
+      </div>
+      <div class="rebuttal-section arg-section">
+        <div class="section-eyebrow">Rebuttal</div>
+        <div class="rebuttal-text" id="rebuttal${prefix}"></div>
+      </div>
+    `;
+  }
+
+  function renderDebate(debate) {
+    const btn = document.getElementById('argueBtn');
+
+    document.getElementById('panelLeft').innerHTML  = buildPanel(debate.sideA, true);
+    document.getElementById('panelRight').innerHTML = buildPanel(debate.sideB, false);
+
+    // Speed map: chars/interval ms — faster for deep (more text)
+    const speeds = { surface: 18, moderate: 13, deep: 9 };
+    const spd = speeds[depth] || 13;
+
+    const dataMap = {
+      stanceA:   debate.sideA.stance,
+      stanceB:   debate.sideB.stance,
+      openingA:  debate.sideA.openingClaim,
+      openingB:  debate.sideB.openingClaim,
+      pointA1:   debate.sideA.supportingPoints[0]?.point    || '',
+      pointB1:   debate.sideB.supportingPoints[0]?.point    || '',
+      evidA1:    debate.sideA.supportingPoints[0]?.evidence || '',
+      evidB1:    debate.sideB.supportingPoints[0]?.evidence || '',
+      pointA2:   debate.sideA.supportingPoints[1]?.point    || '',
+      pointB2:   debate.sideB.supportingPoints[1]?.point    || '',
+      evidA2:    debate.sideA.supportingPoints[1]?.evidence || '',
+      evidB2:    debate.sideB.supportingPoints[1]?.evidence || '',
+      rebuttalA: debate.sideA.rebuttal,
+      rebuttalB: debate.sideB.rebuttal,
+    };
+
+    // Reveal paired fields simultaneously; next pair starts after both finish
+    const pairs = [
+      ['stanceA',   'stanceB'],
+      ['openingA',  'openingB'],
+      ['pointA1',   'pointB1'],
+      ['evidA1',    'evidB1'],
+      ['pointA2',   'pointB2'],
+      ['evidA2',    'evidB2'],
+      ['rebuttalA', 'rebuttalB'],
+    ];
+
+    let idx = 0;
+
+    function nextPair() {
+      if (idx >= pairs.length) { btn.disabled = false; return; }
+      const [idA, idB] = pairs[idx++];
+      let done = 0;
+      const onOne = () => { if (++done === 2) setTimeout(nextPair, 180); };
+      if (dataMap[idA]) typewrite(idA, dataMap[idA], spd, onOne); else onOne();
+      if (dataMap[idB]) typewrite(idB, dataMap[idB], spd, onOne); else onOne();
+    }
+
+    nextPair();
+  }
+
+  // ── MAIN ──
+  async function triggerDebate() {
+    const topic = document.getElementById('topicInput').value.trim();
+    const btn   = document.getElementById('argueBtn');
+
+    clearError();
+
+    if (!API_KEY) {
+      keyPanel.classList.add('visible');
+      showError('Enter your Anthropic API key above to begin.');
+      return;
+    }
+
+    if (!topic) { showError('Enter a topic to debate.'); return; }
+
+    btn.disabled = true;
+    setLoading(true);
+    resetPanels();
+
+    const depthInstructions = {
+      surface:  'Keep every field to 1–2 punchy sentences. Be direct and bold.',
+      moderate: 'Use 2–3 sentences per field with clear, grounded reasoning.',
+      deep:     'Write 3–5 sentences per field with detailed analysis, specific examples, counterexamples, and nuanced argumentation.',
+    };
+
+    const prompt = `You are a rigorous debate engine. Construct a structured two-sided debate on the topic below.
+
+Topic: "${topic}"
+Depth: ${depth} — ${depthInstructions[depth]}
+
+Return ONLY valid JSON — no markdown, no code fences, no explanation — conforming exactly to this schema:
+
+{
+  "sideA": {
+    "stance": "One clear, direct sentence stating the position",
+    "openingClaim": "Opening paragraph establishing the argument",
+    "supportingPoints": [
+      { "point": "First argument heading", "evidence": "Evidence or reasoning" },
+      { "point": "Second argument heading", "evidence": "Evidence or reasoning" }
+    ],
+    "rebuttal": "Rebuttal anticipating and undermining the opposing side"
+  },
+  "sideB": {
+    "stance": "One clear, direct opposing sentence",
+    "openingClaim": "Opening paragraph establishing the counter-argument",
+    "supportingPoints": [
+      { "point": "First opposing argument heading", "evidence": "Evidence or reasoning" },
+      { "point": "Second opposing argument heading", "evidence": "Evidence or reasoning" }
+    ],
+    "rebuttal": "Rebuttal anticipating and undermining side A"
+  }
+}`;
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'x-api-key':     API_KEY,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+          model:      'claude-opus-4-6',
+          max_tokens: 2048,
+          thinking:   { type: 'adaptive' },
+          messages:   [{ role: 'user', content: prompt }],
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error?.message || `API error ${res.status}`);
+      }
+
+      const data = await res.json();
+
+      // Find the text block (thinking block may precede it)
+      const textBlock = data.content.find(b => b.type === 'text');
+      if (!textBlock) throw new Error('No text response received.');
+
+      const raw = textBlock.text.trim();
+
+      let debate;
+      try {
+        debate = JSON.parse(raw);
+      } catch {
+        const m = raw.match(/\{[\s\S]*\}/);
+        if (m) debate = JSON.parse(m[0]);
+        else throw new Error('Could not parse response — please try again.');
+      }
+
+      setLoading(false);
+      renderDebate(debate);
+
+    } catch (err) {
+      setLoading(false);
+      showError(err.message || 'Something went wrong. Please try again.');
+      btn.disabled = false;
+    }
+  }
+</script>
+</body>
+</html>
